@@ -43,10 +43,11 @@ class PurchaseService
 
             // Guarded decrement — the WHERE clause is a second safety net against overselling.
             $upd = $this->db->prepare(
-                'UPDATE products SET quantity_available = quantity_available - :q
-                 WHERE id = :id AND quantity_available >= :q'
+                'UPDATE products SET quantity_available = quantity_available - :qty
+                 WHERE id = :id AND quantity_available >= :min_qty'
             );
-            $upd->execute([':q' => $quantity, ':id' => $productId]);
+            // Distinct placeholder names: MySQL native prepares reject a repeated named parameter.
+            $upd->execute([':qty' => $quantity, ':min_qty' => $quantity, ':id' => $productId]);
             if ($upd->rowCount() === 0) {
                 throw new RuntimeException('Purchase failed — stock changed, please retry.');
             }

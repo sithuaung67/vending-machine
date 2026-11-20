@@ -9,7 +9,17 @@ require dirname(__DIR__) . '/bootstrap.php';
 
 use App\Core\Database;
 
-$pdo = Database::connection();
+// On first boot the database container may still be starting — retry for ~30s.
+for ($attempt = 1; ; $attempt++) {
+    try {
+        $pdo = Database::connection();
+        break;
+    } catch (PDOException $e) {
+        if ($attempt >= 15) throw $e;
+        fwrite(STDERR, "Database not ready (attempt $attempt): {$e->getMessage()}\n");
+        sleep(2);
+    }
+}
 $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
 $auto = $driver === 'mysql' ? 'INT AUTO_INCREMENT PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT';
 $decimal = $driver === 'mysql' ? 'DECIMAL(10,3)' : 'NUMERIC';

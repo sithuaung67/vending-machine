@@ -131,9 +131,10 @@ final class ProductsController
             Response::redirect("/products/{$id}/purchase");
         }
 
+        $name = $this->products->find((int) $id)['name'] ?? 'item';
         flash('success', sprintf(
-            'Purchased %d × item for %s USD. %d left in stock.',
-            $result['quantity'], $result['total_price'], $result['remaining']
+            'Purchased %d × %s for $%s. %d left in stock.',
+            $result['quantity'], $name, money($result['total_price']), $result['remaining']
         ));
         Response::redirect('/products');
     }

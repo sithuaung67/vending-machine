@@ -68,13 +68,29 @@ php -S 127.0.0.1:8000 -t public
 > To try it instantly without MySQL, set `DB_CONNECTION=sqlite` and
 > `DB_DATABASE=./database/app.sqlite` in `.env`, then run the two commands above.
 
-## 5. Deployment (cPanel / shared hosting)
-1. Upload the project (outside or inside `public_html`).
-2. Point the domain/subdomain **document root to the `public/` folder**
-   (or move `public/*` into `public_html` and set the paths).
-3. Create a MySQL database + user in cPanel, then fill `.env` (`DB_*`, `JWT_SECRET`).
-4. Run `php database/migrate.php` (cPanel “Terminal” or a one‑off script) to create tables + seed.
-5. Ensure `public/.htaccess` is present (pretty URLs via `mod_rewrite`).
+## 5. Deployment (Railway + MySQL)
+The repo ships a `Dockerfile` (PHP 8.3 + `pdo_mysql`). On start it runs
+`php database/migrate.php` (creates tables + seeds demo data, waits for MySQL to be ready),
+then serves `public/` with PHP's built-in server on `$PORT`.
+
+1. Railway → **New Project → Deploy from GitHub repo** → pick this repo.
+2. In the project: **+ New → Database → MySQL**.
+3. App service → **Variables**:
+   ```
+   DB_CONNECTION=mysql
+   DB_HOST=${{MySQL.MYSQLHOST}}
+   DB_PORT=${{MySQL.MYSQLPORT}}
+   DB_DATABASE=${{MySQL.MYSQLDATABASE}}
+   DB_USERNAME=${{MySQL.MYSQLUSER}}
+   DB_PASSWORD=${{MySQL.MYSQLPASSWORD}}
+   JWT_SECRET=<long random string>
+   APP_ENV=production
+   APP_DEBUG=false
+   ```
+4. App service → **Settings → Networking → Generate Domain**.
+
+Any Docker host works the same way; for Apache/cPanel point the document root at `public/`
+(`public/.htaccess` handles pretty URLs).
 
 ## 6. Demo credentials (after migrate)
 | Role | Email | Password |

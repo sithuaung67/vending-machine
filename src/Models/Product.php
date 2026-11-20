@@ -17,7 +17,16 @@ class Product
 
     public function all(): array
     {
-        return $this->db->query('SELECT * FROM products ORDER BY id DESC')->fetchAll();
+        return array_map([$this, 'cast'], $this->db->query('SELECT * FROM products ORDER BY id DESC')->fetchAll());
+    }
+
+    /** Same types whatever the driver (MySQL returns DECIMAL as a string). */
+    private function cast(array $row): array
+    {
+        $row['id'] = (int) $row['id'];
+        $row['price'] = (float) $row['price'];
+        $row['quantity_available'] = (int) $row['quantity_available'];
+        return $row;
     }
 
     /** Paginated + sorted list. @return array{data:array,total:int,page:int,per_page:int,pages:int,sort:string,dir:string} */
@@ -35,7 +44,7 @@ class Product
         $stmt->execute();
 
         return [
-            'data' => $stmt->fetchAll(),
+            'data' => array_map([$this, 'cast'], $stmt->fetchAll()),
             'total' => $total,
             'page' => $page,
             'per_page' => $perPage,
@@ -49,7 +58,8 @@ class Product
     {
         $stmt = $this->db->prepare('SELECT * FROM products WHERE id = :id');
         $stmt->execute([':id' => $id]);
-        return $stmt->fetch() ?: null;
+        $row = $stmt->fetch();
+        return $row ? $this->cast($row) : null;
     }
 
     public function create(array $data): int
