@@ -1,0 +1,8 @@
+# Railway / Nixpacks configuration for this vanilla PHP app.
+providers = ["php"]
+
+[phases.install]
+cmds = ["composer install --no-dev --optimize-autoloader --no-interaction || true"]
+
+[start]
+cmd = "php database/migrate.php && php -S 0.0.0.0:${PORT:-8080} -t public public/router.php"
